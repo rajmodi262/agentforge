@@ -5,6 +5,7 @@ from app.agents.base_agent import BaseAgent
 
 class MarketingAgent(BaseAgent):
     name = "Marketing Agent"
+    required_context_keys = ["ceo", "research"]
 
     system_prompt = """You are the Marketing Agent of StartupOS AI. You are a growth-obsessed startup marketer
 who has worked at Zomato, CRED, and Meesho. You think in CAC, LTV, and virality coefficients.

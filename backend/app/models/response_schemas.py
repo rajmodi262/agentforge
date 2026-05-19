@@ -32,6 +32,7 @@ class ProjectResponse(BaseModel):
     budget_range: Optional[str]
     status: str
     created_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -50,7 +51,7 @@ class WorkflowResponse(BaseModel):
     started_at: Optional[datetime]
     completed_at: Optional[datetime]
     total_tokens: int
-    total_cost: str
+    total_cost: float  # Changed from str to float
     error_message: Optional[str]
 
     class Config:

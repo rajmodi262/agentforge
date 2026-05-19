@@ -5,6 +5,7 @@ from app.agents.base_agent import BaseAgent
 
 class AnalyticsAgent(BaseAgent):
     name = "Analytics Agent"
+    required_context_keys = ["marketing", "finance", "developer"]
 
     system_prompt = """You are the Analytics Agent of StartupOS AI. You are a data-driven growth analyst
 who has built measurement frameworks at Mixpanel, Amplitude, and CleverTap.

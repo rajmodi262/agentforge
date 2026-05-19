@@ -1,16 +1,53 @@
-"""StartupOS AI — Research Agent"""
+"""StartupOS AI — Research Agent
 
+Uses Brave Search API to gather real market intelligence.
+"""
+
+from typing import Dict, Any
 from app.agents.base_agent import BaseAgent
+from app.tools.web_search import web_search
+
+
+async def _research_web_search(brief: str, context: Dict[str, Any]) -> Any:
+    """Run targeted web searches based on the CEO's questions."""
+    queries = []
+
+    # Extract questions from CEO output if available
+    ceo_output = context.get("ceo_output", {})
+    if isinstance(ceo_output, dict):
+        ceo_questions = ceo_output.get("questions_for_research_agent", [])
+        queries.extend(ceo_questions[:3])  # Top 3 questions
+
+    # If no CEO questions, generate from brief
+    if not queries:
+        queries = [
+            f"market size {brief[:80]}",
+            f"competitors {brief[:80]}",
+            f"industry trends {brief[:80]}",
+        ]
+
+    all_results = []
+    for query in queries:
+        results = await web_search(query, count=3)
+        all_results.append({"query": query, "results": results})
+
+    return all_results
 
 
 class ResearchAgent(BaseAgent):
     name = "Research Agent"
+    reasoning_steps = 3  # think → critique → refine
+    required_context_keys = ["ceo"]
+    tools = [("web_search", _research_web_search)]
 
     system_prompt = """You are the Research Agent of StartupOS AI. You are the market intelligence specialist.
 
 YOUR ROLE:
 Transform the CEO's brief into hard market intelligence. Find real data, real competitors,
 real numbers. Do not make up statistics — acknowledge data gaps clearly.
+
+You have ACCESS TO WEB SEARCH RESULTS. Use the tool results provided to cite real sources
+and ground your analysis in actual data.
 
 WHAT TO RESEARCH:
 1. Market size (TAM, SAM, SOM) — use industry reports, news articles, funding data

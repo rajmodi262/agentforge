@@ -9,6 +9,24 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
+from tenacity import retry, wait_exponential, stop_after_attempt
+
+@retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(3), reraise=True)
+async def _execute_search(query: str, count: int) -> dict:
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "https://api.search.brave.com/res/v1/web/search",
+            params={"q": query, "count": count},
+            headers={
+                "Accept": "application/json",
+                "Accept-Encoding": "gzip",
+                "X-Subscription-Token": settings.brave_search_api_key,
+            },
+            timeout=10.0,
+        )
+        response.raise_for_status()
+        return response.json()
+
 async def web_search(query: str, count: int = 5) -> List[Dict[str, str]]:
     """Search the web using Brave Search API.
 
@@ -24,33 +42,20 @@ async def web_search(query: str, count: int = 5) -> List[Dict[str, str]]:
         return _mock_search(query)
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://api.search.brave.com/res/v1/web/search",
-                params={"q": query, "count": count},
-                headers={
-                    "Accept": "application/json",
-                    "Accept-Encoding": "gzip",
-                    "X-Subscription-Token": settings.brave_search_api_key,
-                },
-                timeout=10.0,
-            )
-            response.raise_for_status()
-            data = response.json()
+        data = await _execute_search(query, count)
+        results = []
+        for item in data.get("web", {}).get("results", [])[:count]:
+            results.append({
+                "title": item.get("title", ""),
+                "url": item.get("url", ""),
+                "description": item.get("description", ""),
+            })
 
-            results = []
-            for item in data.get("web", {}).get("results", [])[:count]:
-                results.append({
-                    "title": item.get("title", ""),
-                    "url": item.get("url", ""),
-                    "description": item.get("description", ""),
-                })
-
-            logger.info(f"Brave Search: '{query}' → {len(results)} results")
-            return results
+        logger.info(f"Brave Search: '{query}' → {len(results)} results")
+        return results
 
     except Exception as e:
-        logger.error(f"Brave Search error: {e}")
+        logger.error(f"Brave Search error (after retries): {e}")
         return _mock_search(query)
 
 
