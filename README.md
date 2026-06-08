@@ -103,6 +103,42 @@ START → CEO Agent → ┬─ Research Agent  ─┐
    agent_thinking       reasoning_step       agent_completed
 ```
 
+### 🔄 User Flow Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Startup Founder
+    participant UI as React UI (WebSocket Client)
+    participant API as FastAPI Gateway
+    participant LG as LangGraph Orchestrator
+    participant AG as 7-Agent Cluster
+    participant DB as PostgreSQL Database
+
+    User->>UI: Submits raw startup idea
+    UI->>API: POST /api/blueprint (Initialize Session)
+    API->>DB: Create project record & audit trail
+    API->>LG: Trigger graph orchestration (background task)
+    LG->>UI: Establish WebSocket connection
+    
+    rect rgb(30, 41, 59)
+        note over LG, AG: Parallel Agent Execution (Diamond Topology)
+        LG->>AG: Fan-out: Invoke CEO, Research, Marketing, Dev, & Finance agents
+        AG-->>UI: Live-stream thinking tokens & reasoning steps via WS
+    end
+
+    rect rgb(15, 23, 42)
+        note over LG, AG: Consensus Debate & Report Generation
+        LG->>AG: Initiate structured 4-Round Board Meeting Debate
+        AG-->>UI: Broadcast inter-agent debate statements
+        LG->>API: Compile final consolidated markdown report
+        API->>DB: Save generated PDF/Markdown blueprint files
+    end
+
+    API-->>UI: Emit workflow completion signal
+    UI->>User: Render 3D debate visualization & enable PDF download
+```
+
 ---
 
 ## 🚀 Quick Start
