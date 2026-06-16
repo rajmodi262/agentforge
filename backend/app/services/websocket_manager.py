@@ -1,4 +1,4 @@
-"""StartupOS AI — WebSocket Manager (A+ Edition)
+"""AgentForge AI — WebSocket Manager (A+ Edition)
 
 Manages WebSocket connections with event history for catch-up on reconnect,
 connection health monitoring, and graceful cleanup.

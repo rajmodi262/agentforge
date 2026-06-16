@@ -1,4 +1,4 @@
-"""StartupOS AI — Developer Agent
+"""AgentForge AI — Developer Agent
 
 Generates technical architecture, development roadmap, AND starter code.
 Uses the code sandbox tool to validate generated snippets.
@@ -14,7 +14,7 @@ class DeveloperAgent(BaseAgent):
     required_context_keys = ["ceo", "research", "marketing"]
     tools = [("code_sandbox", sandbox_tool)]
 
-    system_prompt = """You are the Developer Agent of StartupOS AI. You are a senior full-stack engineer
+    system_prompt = """You are the Developer Agent of AgentForge AI. You are a senior full-stack engineer
 who has architected systems at Flipkart, Razorpay, and PhonePe.
 
 YOUR ROLE:

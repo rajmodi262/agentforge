@@ -1,4 +1,4 @@
-"""StartupOS AI — Results API
+"""AgentForge AI — Results API
 
 Serves agent outputs for the Report viewer.
 Uses soft-delete aware queries for data integrity.

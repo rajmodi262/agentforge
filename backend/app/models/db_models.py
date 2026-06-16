@@ -1,4 +1,4 @@
-"""StartupOS AI — SQLAlchemy ORM Models
+"""AgentForge AI — SQLAlchemy ORM Models
 
 Production-grade with enterprise features:
 - SoftDeleteMixin for safe logical deletes

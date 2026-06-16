@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Prompt IDE Page
+ * AgentForge AI — Prompt IDE Page
  * 
  * Agent selector, prompt versioning, editor, and activation.
  */

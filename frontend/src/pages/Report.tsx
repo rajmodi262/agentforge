@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Report Page (A+ Edition)
+ * AgentForge AI — Report Page (A+ Edition)
  *
  * Fetches and displays actual agent outputs in a beautiful card layout.
  * Supports collapsible sections, PDF download, and live status polling.
@@ -225,7 +225,7 @@ export default function Report() {
             fontSize: '1.3rem', fontWeight: 800, cursor: 'pointer',
             background: 'linear-gradient(135deg, #7c3aed, #06b6d4)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>StartupOS</div>
+          }}>AgentForge</div>
           <span style={{ color: '#475569', fontSize: '0.8rem' }}>/ <span style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>Dashboard</span> / Report</span>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>

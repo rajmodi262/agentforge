@@ -1,4 +1,4 @@
-"""StartupOS AI — Pydantic Response Schemas"""
+"""AgentForge AI — Pydantic Response Schemas"""
 
 from pydantic import BaseModel
 from typing import Optional, List, Any

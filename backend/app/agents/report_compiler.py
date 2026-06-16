@@ -1,4 +1,4 @@
-"""StartupOS AI — Report Compiler Agent
+"""AgentForge AI — Report Compiler Agent
 
 Aggregates all 7 agent outputs into a structured report.
 Generates PDF using ReportLab.
@@ -17,8 +17,8 @@ class ReportCompiler:
     def compile_json(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """Compile all agent outputs into a structured JSON report."""
         report = {
-            "title": "StartupOS AI — Business Plan Report",
-            "generated_by": "StartupOS AI Multi-Agent System",
+            "title": "AgentForge AI — Business Plan Report",
+            "generated_by": "AgentForge AI Multi-Agent System",
             "sections": []
         }
 

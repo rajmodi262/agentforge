@@ -1,4 +1,4 @@
-"""StartupOS AI — Test Fixtures
+"""AgentForge AI — Test Fixtures
 
 Shared fixtures for all test modules:
 - In-memory SQLite database with StaticPool (shared across connections)
@@ -80,7 +80,7 @@ def db_session():
 def auth_headers(client):
     """Register a test user and return auth headers."""
     response = client.post("/api/v1/auth/register", json={
-        "email": "test@startupos.ai",
+        "email": "test@agentforge.ai",
         "password": "TestPass123",
         "name": "Test User",
     })

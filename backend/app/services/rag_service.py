@@ -1,4 +1,4 @@
-"""StartupOS AI — RAG Service (ChromaDB Vector Store)
+"""AgentForge AI — RAG Service (ChromaDB Vector Store)
 
 Provides Retrieval-Augmented Generation capabilities:
 - Stores agent outputs as embeddings in ChromaDB
@@ -28,7 +28,7 @@ def _get_collection():
             os.makedirs(persist_dir, exist_ok=True)
             _client = chromadb.PersistentClient(path=persist_dir)
             _collection = _client.get_or_create_collection(
-                name="startupos_agent_outputs",
+                name="agentforge_agent_outputs",
                 metadata={"hnsw:space": "cosine"},
             )
             logger.info(f"ChromaDB RAG collection initialized (persistent: {persist_dir})")
@@ -160,7 +160,7 @@ def get_rag_status() -> Dict[str, Any]:
         return {
             "enabled": True,
             "documents_stored": count,
-            "collection": "startupos_agent_outputs",
+            "collection": "agentforge_agent_outputs",
         }
     except Exception as e:
         return {"enabled": False, "reason": str(e)}

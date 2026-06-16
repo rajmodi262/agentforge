@@ -168,7 +168,7 @@ export default function CodePreview({ lines, liveLines, isInView, title }: CodeP
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffbd2e' }} />
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#27c93f' }} />
           <span style={{ marginLeft: '8px', fontFamily: typography.fontFamilyMono, fontSize: '10px', color: colors.textMuted }}>
-            {isLive ? 'startupos.ai/blueprint' : 'preview.startupos.ai'}
+            {isLive ? 'agentforge.ai/blueprint' : 'preview.agentforge.ai'}
           </span>
         </div>
 

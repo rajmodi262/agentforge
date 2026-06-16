@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Knowledge Base Page
+ * AgentForge AI — Knowledge Base Page
  * 
  * Document upload, RAG search, and knowledge management.
  */

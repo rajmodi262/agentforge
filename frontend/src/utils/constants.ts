@@ -20,7 +20,7 @@ export const STATS = [
 export const TESTIMONIALS = [
   { quote: "I went from a napkin idea to a 42-page investor-ready blueprint in 90 seconds. My VC literally asked if I hired McKinsey.", author: "Sarah Chen", role: "Founder, NeuralLeaf" },
   { quote: "Seven AI agents analyzed my market, built my financial model, AND designed my tech architecture. While I was making coffee.", author: "Marcus Rivera", role: "CEO, QuantumFlow" },
-  { quote: "StartupOS didn't just save me weeks of work — it found a market opportunity I completely missed. That pivot 3x'd our seed round.", author: "Priya Sharma", role: "CTO, DataHive AI" },
+  { quote: "AgentForge didn't just save me weeks of work — it found a market opportunity I completely missed. That pivot 3x'd our seed round.", author: "Priya Sharma", role: "CTO, DataHive AI" },
 ] as const;
 
 export const TERMINAL_LINES = [

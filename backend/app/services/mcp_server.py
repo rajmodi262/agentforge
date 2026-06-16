@@ -1,7 +1,7 @@
-"""StartupOS AI — MCP (Model Context Protocol) Server
+"""AgentForge AI — MCP (Model Context Protocol) Server
 
 Implements the MCP standard so any MCP-compatible client
-(Claude Desktop, Cursor, Windsurf, etc.) can interact with StartupOS.
+(Claude Desktop, Cursor, Windsurf, etc.) can interact with AgentForge.
 
 Resources: projects, agents, knowledge docs
 Tools: analyze startup, search knowledge, get results
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class MCPServer:
     """
-    Lightweight MCP server that exposes StartupOS capabilities
+    Lightweight MCP server that exposes AgentForge capabilities
     as MCP resources and tools.
     
     This follows the MCP specification (2024-11-05) with:
@@ -28,7 +28,7 @@ class MCPServer:
 
     def __init__(self):
         self.server_info = {
-            "name": "startupos-ai",
+            "name": "agentforge-ai",
             "version": "1.0.0",
             "protocolVersion": "2024-11-05",
         }
@@ -46,8 +46,8 @@ class MCPServer:
     def _register_tools(self) -> list[dict]:
         return [
             {
-                "name": "startupos_analyze",
-                "description": "Get instructions for starting a full multi-agent startup analysis. The analysis itself runs asynchronously via the StartupOS API; this tool returns the exact endpoints and request body to kick it off and where to stream results.",
+                "name": "agentforge_analyze",
+                "description": "Get instructions for starting a full multi-agent startup analysis. The analysis itself runs asynchronously via the AgentForge API; this tool returns the exact endpoints and request body to kick it off and where to stream results.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -68,8 +68,8 @@ class MCPServer:
                 },
             },
             {
-                "name": "startupos_search_knowledge",
-                "description": "Search the StartupOS knowledge base using semantic/hybrid search. Returns relevant document chunks from uploaded PDFs, markdown files, and other documents.",
+                "name": "agentforge_search_knowledge",
+                "description": "Search the AgentForge knowledge base using semantic/hybrid search. Returns relevant document chunks from uploaded PDFs, markdown files, and other documents.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -87,7 +87,7 @@ class MCPServer:
                 },
             },
             {
-                "name": "startupos_get_results",
+                "name": "agentforge_get_results",
                 "description": "Get the analysis results for a previously created project. Returns per-agent outputs including market research, financials, tech stack, and more.",
                 "inputSchema": {
                     "type": "object",
@@ -101,15 +101,15 @@ class MCPServer:
                 },
             },
             {
-                "name": "startupos_list_agents",
-                "description": "List all available AI agents in the StartupOS platform with their capabilities, tools, and current prompt versions.",
+                "name": "agentforge_list_agents",
+                "description": "List all available AI agents in the AgentForge platform with their capabilities, tools, and current prompt versions.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {},
                 },
             },
             {
-                "name": "startupos_list_projects",
+                "name": "agentforge_list_projects",
                 "description": "List all startup analysis projects with their status (draft, running, completed).",
                 "inputSchema": {
                     "type": "object",
@@ -123,7 +123,7 @@ class MCPServer:
                 },
             },
             {
-                "name": "startupos_get_metrics",
+                "name": "agentforge_get_metrics",
                 "description": "Get LLMOps observability metrics: total calls, tokens, cost, latency, and error rates across all agents.",
                 "inputSchema": {
                     "type": "object",
@@ -143,19 +143,19 @@ class MCPServer:
     def _register_resources(self) -> list[dict]:
         return [
             {
-                "uri": "startupos://agents",
-                "name": "StartupOS Agents",
+                "uri": "agentforge://agents",
+                "name": "AgentForge Agents",
                 "description": "List of all 7 specialized AI agents (CEO, Research, Marketing, Developer, Finance, Analytics, Operations)",
                 "mimeType": "application/json",
             },
             {
-                "uri": "startupos://knowledge",
+                "uri": "agentforge://knowledge",
                 "name": "Knowledge Base",
                 "description": "Uploaded documents and their metadata for RAG-powered agent context",
                 "mimeType": "application/json",
             },
             {
-                "uri": "startupos://metrics",
+                "uri": "agentforge://metrics",
                 "name": "Platform Metrics",
                 "description": "Aggregate LLMOps metrics (tokens, cost, latency, error rates)",
                 "mimeType": "application/json",
@@ -211,17 +211,17 @@ class MCPServer:
     async def handle_call_tool(self, name: str, arguments: dict, db_session=None) -> dict:
         """Handle tools/call request — execute the requested tool."""
         try:
-            if name == "startupos_list_agents":
+            if name == "agentforge_list_agents":
                 return await self._tool_list_agents()
-            elif name == "startupos_search_knowledge":
+            elif name == "agentforge_search_knowledge":
                 return await self._tool_search_knowledge(arguments)
-            elif name == "startupos_get_metrics":
+            elif name == "agentforge_get_metrics":
                 return await self._tool_get_metrics(arguments, db_session)
-            elif name == "startupos_list_projects":
+            elif name == "agentforge_list_projects":
                 return await self._tool_list_projects(arguments, db_session)
-            elif name == "startupos_get_results":
+            elif name == "agentforge_get_results":
                 return await self._tool_get_results(arguments, db_session)
-            elif name == "startupos_analyze":
+            elif name == "agentforge_analyze":
                 return self._tool_analyze_info(arguments)
             else:
                 return {"content": [{"type": "text", "text": f"Unknown tool: {name}"}], "isError": True}
@@ -292,7 +292,7 @@ class MCPServer:
             "content": [{
                 "type": "text",
                 "text": json.dumps({
-                    "message": "To run a startup analysis, use the StartupOS API:",
+                    "message": "To run a startup analysis, use the AgentForge API:",
                     "endpoint": "POST /api/v1/projects/",
                     "body": {
                         "title": args.get("business_idea", "")[:50],

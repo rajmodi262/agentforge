@@ -1,4 +1,4 @@
-"""StartupOS AI — Configuration (Pydantic Settings)
+"""AgentForge AI — Configuration (Pydantic Settings)
 
 Includes startup validation and security checks.
 """
@@ -17,7 +17,7 @@ _DEFAULT_JWT_SECRET = "dev-secret-change-in-production"
 
 class Settings(BaseSettings):
     # Database
-    database_url: str = "postgresql://startupos:startupos_dev@localhost:5432/startupos_db"
+    database_url: str = "postgresql://agentforge:agentforge_dev@localhost:5432/agentforge_db"
 
     # Claude API
     anthropic_api_key: str = ""
@@ -59,7 +59,7 @@ class Settings(BaseSettings):
 
     # Redis (task queue + caching)
     redis_url: str = "redis://localhost:6379/0"
-    s3_bucket_name: str = "startupos-reports"
+    s3_bucket_name: str = "agentforge-reports"
 
     # Rate Limiting
     rate_limit_login: str = "10/minute"

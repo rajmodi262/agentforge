@@ -1,4 +1,4 @@
-"""StartupOS AI — API Router (aggregates all route modules)"""
+"""AgentForge AI — API Router (aggregates all route modules)"""
 
 from fastapi import APIRouter
 from app.api.auth import router as auth_router

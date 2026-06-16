@@ -1,4 +1,4 @@
-"""StartupOS AI — Projects API
+"""AgentForge AI — Projects API
 
 Production-grade:
 - Soft-delete aware queries via active_query()
@@ -30,7 +30,7 @@ def _get_or_create_demo_user(db: Session, request: Request = None) -> User:
     Using a shared demo user ensures that projects created anonymously 
     can immediately be started by subsequent requests from the same anonymous session.
     """
-    demo_email = "demo@startupos.ai"
+    demo_email = "demo@agentforge.ai"
     demo_user = db.query(User).filter(User.email == demo_email).first()
     
     if not demo_user:
@@ -223,6 +223,6 @@ def download_report(
 
     return FileResponse(
         path=absolute_path,
-        filename=f"StartupOS_Blueprint_{project.title[:30]}.pdf",
+        filename=f"AgentForge_Blueprint_{project.title[:30]}.pdf",
         media_type="application/pdf",
     )

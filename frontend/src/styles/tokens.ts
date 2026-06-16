@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Design Tokens
+ * AgentForge AI — Design Tokens
  *
  * Single source of truth for all colors, typography, spacing, and
  * component styles. Change once here → updates everywhere.

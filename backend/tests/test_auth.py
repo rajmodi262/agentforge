@@ -84,7 +84,7 @@ def test_get_me_authenticated(client, auth_headers):
     response = client.get("/api/v1/auth/me", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "test@startupos.ai"
+    assert data["email"] == "test@agentforge.ai"
     assert data["name"] == "Test User"
 
 

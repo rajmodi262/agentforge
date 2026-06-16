@@ -1,4 +1,4 @@
-"""Alembic Environment — StartupOS AI
+"""Alembic Environment — AgentForge AI
 
 Reads the DB URL from app.config (not alembic.ini) to keep
 credentials in a single source of truth (.env).

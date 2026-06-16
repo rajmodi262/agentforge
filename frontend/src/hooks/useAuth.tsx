@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Auth Hook
+ * AgentForge AI — Auth Hook
  * 
  * React context for global authentication state.
  */

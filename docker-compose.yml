@@ -10,7 +10,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql://startupos:startupos_dev@postgres:5432/startupos_db
+      - DATABASE_URL=postgresql://agentforge:agentforge_dev@postgres:5432/agentforge_db
       - REDIS_URL=redis://redis:6379/0
     depends_on:
       postgres:
@@ -39,15 +39,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: startupos
-      POSTGRES_PASSWORD: startupos_dev
-      POSTGRES_DB: startupos_db
+      POSTGRES_USER: agentforge
+      POSTGRES_PASSWORD: agentforge_dev
+      POSTGRES_DB: agentforge_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U startupos -d startupos_db"]
+      test: ["CMD-SHELL", "pg_isready -U agentforge -d agentforge_db"]
       interval: 5s
       timeout: 5s
       retries: 5

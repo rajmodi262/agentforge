@@ -1,4 +1,4 @@
-"""StartupOS AI — Observability API (Phase 1)
+"""AgentForge AI — Observability API (Phase 1)
 
 Full LLMOps observability matching/exceeding Dify:
 - Paginated agent logs with filtering

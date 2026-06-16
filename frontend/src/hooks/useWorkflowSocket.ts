@@ -325,7 +325,7 @@ export function useWorkflowSocket() {
     setCompletedAgents([]);
     setTerminalLines([
       { type: 'info', text: '╔══════════════════════════════════════════════╗' },
-      { type: 'info', text: '║   STARTUPOS AI — NEURAL PIPELINE ACTIVATED  ║' },
+      { type: 'info', text: '║   AGENTFORGE AI — NEURAL PIPELINE ACTIVATED  ║' },
       { type: 'info', text: '╚══════════════════════════════════════════════╝' },
       { type: 'command', text: '> Connecting to orchestrator...' },
     ]);

@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Admin Panel Page
+ * AgentForge AI — Admin Panel Page
  * 
  * System stats, user RBAC management, audit log viewer.
  */

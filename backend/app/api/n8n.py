@@ -1,7 +1,7 @@
-"""StartupOS AI — n8n Integration API
+"""AgentForge AI — n8n Integration API
 
 Manage n8n webhook connections and view integration status.
-Gives StartupOS access to 400+ external service integrations.
+Gives AgentForge access to 400+ external service integrations.
 """
 
 from fastapi import APIRouter, HTTPException, Body
@@ -64,7 +64,7 @@ async def test_webhook(event_type: str):
     svc = get_n8n_service()
     result = await svc.fire_event(event_type, {
         "test": True,
-        "message": f"Test event from StartupOS AI for '{event_type}'",
+        "message": f"Test event from AgentForge AI for '{event_type}'",
     })
     if result is None:
         raise HTTPException(404, f"No webhook registered for '{event_type}' or delivery failed")

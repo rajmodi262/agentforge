@@ -1,4 +1,4 @@
-"""StartupOS AI — MCP API Endpoints
+"""AgentForge AI — MCP API Endpoints
 
 REST endpoints that expose the MCP protocol over HTTP.
 Any MCP-compatible client can interact via these endpoints.
@@ -48,7 +48,7 @@ async def mcp_call_tool(
     """
     MCP tools/call — execute a tool.
     
-    Body: { "name": "startupos_list_agents", "arguments": {} }
+    Body: { "name": "agentforge_list_agents", "arguments": {} }
     """
     name = payload.get("name", "")
     arguments = payload.get("arguments", {})

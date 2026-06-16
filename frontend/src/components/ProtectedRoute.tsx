@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Protected Route
+ * AgentForge AI — Protected Route
  *
  * Redirects to /login if user is not authenticated.
  * Shows loading skeleton while checking auth state.

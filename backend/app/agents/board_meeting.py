@@ -1,4 +1,4 @@
-"""StartupOS AI — Board Meeting Node
+"""AgentForge AI — Board Meeting Node
 
 After all 7 agents complete, this node stages a multi-round debate
 where agents challenge each other's outputs. The result is a synthesis

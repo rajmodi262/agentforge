@@ -1,4 +1,4 @@
-"""StartupOS AI — Pydantic Request Schemas
+"""AgentForge AI — Pydantic Request Schemas
 
 Input validation with sanitization for all API endpoints.
 """

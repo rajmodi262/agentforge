@@ -1,4 +1,4 @@
-"""StartupOS AI — Integration Tests
+"""AgentForge AI — Integration Tests
 
 End-to-end tests for the full pipeline:
 register → create project → start workflow → check results → download report
@@ -65,7 +65,7 @@ class TestAuth:
     def test_get_me(self, client, auth_headers):
         resp = client.get("/api/v1/auth/me", headers=auth_headers)
         assert resp.status_code == 200
-        assert resp.json()["email"] == "test@startupos.ai"
+        assert resp.json()["email"] == "test@agentforge.ai"
 
     def test_get_me_no_token(self, client):
         resp = client.get("/api/v1/auth/me")
@@ -173,7 +173,7 @@ class TestHealth:
         resp = client.get("/")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["service"] == "StartupOS AI"
+        assert data["service"] == "AgentForge AI"
         assert data["version"] == "1.0.0"
 
     def test_health(self, client):

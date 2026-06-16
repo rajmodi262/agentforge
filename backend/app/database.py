@@ -1,4 +1,4 @@
-"""StartupOS AI — Database Setup (SQLAlchemy)
+"""AgentForge AI — Database Setup (SQLAlchemy)
 
 Production-grade:
 - PostgreSQL primary with SQLite fallback
@@ -33,7 +33,7 @@ def _get_engine():
             return create_engine(db_url, pool_pre_ping=True, pool_size=5, max_overflow=10)
         except Exception as e:
             # Fall back to SQLite
-            sqlite_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "startupos_dev.db")
+            sqlite_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "agentforge_dev.db")
             db_url = f"sqlite:///{sqlite_path}"
             logger.warning(f"PostgreSQL unavailable ({e.__class__.__name__}) — using SQLite: {sqlite_path}")
 

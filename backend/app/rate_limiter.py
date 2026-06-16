@@ -1,4 +1,4 @@
-"""StartupOS AI — Shared Rate Limiter
+"""AgentForge AI — Shared Rate Limiter
 
 Single limiter instance shared across all API modules.
 Avoids circular imports between main.py and auth.py.
