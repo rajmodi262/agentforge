@@ -22,6 +22,12 @@ def _get_engine():
     """Create engine — tries PostgreSQL first, falls back to SQLite."""
     db_url = settings.database_url
 
+    # Empty DATABASE_URL → SQLite fallback (documented dev convenience)
+    if not db_url or not db_url.strip():
+        sqlite_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "agentforge_dev.db")
+        db_url = f"sqlite:///{sqlite_path}"
+        logger.info(f"No DATABASE_URL set — using SQLite: {sqlite_path}")
+
     # If PostgreSQL, try connecting; fall back to SQLite if unavailable
     if db_url.startswith("postgresql"):
         try:

@@ -9,6 +9,7 @@ that runs multiple Claude calls internally to simulate the debate.
 """
 
 import json
+import time
 import logging
 from typing import Dict, Any
 
@@ -77,6 +78,7 @@ async def board_meeting_node(state: dict) -> dict:
         )
 
         try:
+            _t0 = time.time()
             result = await claude.generate(
                 system_prompt=f"You are {challenger} in a startup board meeting. Be constructive but rigorous.",
                 user_message=challenge_prompt,
@@ -85,6 +87,12 @@ async def board_meeting_node(state: dict) -> dict:
             )
             total_tokens += result["tokens_used"]
             total_cost += result["cost"]
+            await claude.write_agent_log(
+                workflow_id, "Board Meeting",
+                tokens=result["tokens_used"], cost=result["cost"],
+                latency_ms=int((time.time() - _t0) * 1000), status="success",
+                output_preview=str(result.get("content", "")),
+            )
 
             try:
                 challenge_data = json.loads(result["content"]) if isinstance(result["content"], str) else result["content"]
@@ -140,6 +148,7 @@ async def board_meeting_node(state: dict) -> dict:
     )
 
     try:
+        _t0 = time.time()
         synthesis_result = await claude.generate(
             system_prompt="You are a neutral board secretary producing a consensus document.",
             user_message=synthesis_prompt,
@@ -148,6 +157,12 @@ async def board_meeting_node(state: dict) -> dict:
         )
         total_tokens += synthesis_result["tokens_used"]
         total_cost += synthesis_result["cost"]
+        await claude.write_agent_log(
+            workflow_id, "Board Meeting",
+            tokens=synthesis_result["tokens_used"], cost=synthesis_result["cost"],
+            latency_ms=int((time.time() - _t0) * 1000), status="success",
+            output_preview=str(synthesis_result.get("content", "")),
+        )
 
         try:
             board_output = json.loads(synthesis_result["content"])

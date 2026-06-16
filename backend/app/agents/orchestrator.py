@@ -155,6 +155,28 @@ def _store_rag(project_id, agent_name, output, workflow_id):
     )
 
 
+def _retrieve_rag(query, project_id, workflow_id) -> str:
+    """Fetch similar past analyses to enrich the current agent's context.
+
+    Best-effort: returns "" if the vector store is unavailable or empty.
+    Excludes the current workflow so an agent never reads its own siblings.
+    """
+    try:
+        from app.services.rag_service import retrieve_similar_context
+        results = retrieve_similar_context(
+            query=query,
+            project_id=project_id,
+            n_results=3,
+            exclude_workflow_id=workflow_id,
+        )
+        if not results:
+            return ""
+        return "\n\n".join(r["document"][:800] for r in results if r.get("document"))
+    except Exception as e:
+        logger.debug(f"RAG retrieve skipped: {e}")
+        return ""
+
+
 def _build_and_persist_report(factory, project_id, brief, agent_outputs):
     compiler = ReportCompiler()
     context = {"brief": brief}
@@ -273,6 +295,13 @@ def _make_agent_node(agent_key: str, AgentClass):
                     workflow_id, prev_name, agent.name,
                     f"Handing off to {agent.name}..."
                 )
+
+            # RAG enrichment: pull similar past analyses into the brief (offloaded)
+            retrieved = await asyncio.to_thread(
+                _retrieve_rag, brief, state["project_id"], workflow_id
+            )
+            if retrieved:
+                brief = f"{brief}\n\nRELEVANT PAST ANALYSES (for additional context):\n{retrieved}"
 
             # Run the agent
             result = await agent.run(

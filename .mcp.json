@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "agentforge": {
+      "command": "python",
+      "args": ["-m", "app.mcp_stdio"],
+      "cwd": "backend"
+    }
+  }
+}

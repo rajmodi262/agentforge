@@ -584,6 +584,63 @@ class ClaudeService:
             "cost": cost,
         }
 
+    async def write_agent_log(
+        self,
+        workflow_id,
+        agent_name: str,
+        *,
+        tokens: int = 0,
+        cost: float = 0.0,
+        latency_ms: int = 0,
+        status: str = "success",
+        input_preview: str = "",
+        output_preview: str = "",
+    ) -> None:
+        """Persist one LLM call to the AgentLog table for observability.
+
+        No-ops when workflow_id is absent (standalone agent runs / tests).
+        Best-effort: any DB error is swallowed so logging never breaks a run.
+        The blocking insert runs in a worker thread.
+        """
+        if not workflow_id:
+            return
+
+        provider = "mock" if self.mock_mode else self.provider
+        model_name = {
+            "groq": self.groq_model,
+            "gemini": self.gemini_model,
+            "claude": settings.claude_model,
+        }.get(provider) or provider
+
+        def _insert():
+            from app.database import get_session_factory
+            from app.models.db_models import AgentLog
+            db = get_session_factory()()
+            try:
+                db.add(AgentLog(
+                    workflow_id=workflow_id,
+                    agent_name=agent_name,
+                    total_tokens=tokens,
+                    cost_usd=cost,
+                    latency_ms=latency_ms,
+                    model_provider=provider,
+                    model_name=model_name,
+                    status=status,
+                    input_preview=(input_preview or "")[:500],
+                    output_preview=(output_preview or "")[:500],
+                ))
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                logger.debug(f"AgentLog write skipped: {e}")
+            finally:
+                db.close()
+
+        try:
+            await asyncio.to_thread(_insert)
+        except Exception as e:
+            logger.debug(f"AgentLog offload skipped: {e}")
+
 
 # ─────────────────────────────── Singleton ───────────────────────────────
 

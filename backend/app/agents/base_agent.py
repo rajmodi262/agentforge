@@ -12,6 +12,7 @@ All 7 agents inherit from this class. It handles:
 
 import json
 import time
+import asyncio
 import logging
 from typing import Optional, Dict, Any, List, Callable, Type
 from pydantic import BaseModel, ValidationError
@@ -94,8 +95,9 @@ class BaseAgent:
             except ImportError:
                 pass
 
-        # Resolve which system prompt to use (DB-activated or class default)
-        active_prompt = self._get_active_prompt()
+        # Resolve which system prompt to use (DB-activated or class default).
+        # Offloaded — _get_active_prompt does a blocking DB query.
+        active_prompt = await asyncio.to_thread(self._get_active_prompt)
 
         # ─── Step 1: Initial Analysis ───
         initial_output = await self._generate_with_retries(
@@ -223,6 +225,7 @@ class BaseAgent:
         last_error = None
 
         for attempt in range(max_retries):
+            t0 = time.time()
             try:
                 if output_model:
                     result = await self.claude.generate_structured(
@@ -247,6 +250,13 @@ class BaseAgent:
                     parsed = self._parse_output(result["content"])
                     output_model(**parsed)  # raises ValidationError if invalid → retry
 
+                # Observability: persist this LLM call (no-op without workflow_id)
+                await self.claude.write_agent_log(
+                    workflow_id, self.name,
+                    tokens=result.get("tokens_used", 0), cost=result.get("cost", 0.0),
+                    latency_ms=int((time.time() - t0) * 1000), status="success",
+                    input_preview=user_message, output_preview=str(result.get("content", "")),
+                )
                 return result
             except Exception as e:
                 last_error = e
@@ -257,6 +267,10 @@ class BaseAgent:
                         f"Retrying... (attempt {attempt + 2}/{max_retries})"
                     )
 
+        await self.claude.write_agent_log(
+            workflow_id, self.name, tokens=0, cost=0.0, latency_ms=0,
+            status="error", output_preview=str(last_error),
+        )
         if workflow_id:
             await ws_manager.send_workflow_error(
                 workflow_id, self.name, str(last_error)
