@@ -239,6 +239,14 @@ class BaseAgent:
                         agent_name=self.name,
                         max_tokens=4096,
                     )
+
+                # Validate structured output so malformed/invalid data triggers a
+                # retry instead of silently flowing downstream. Enforced only for
+                # real LLM calls — mock mode keeps its lenient behavior.
+                if output_model and not self.claude.mock_mode:
+                    parsed = self._parse_output(result["content"])
+                    output_model(**parsed)  # raises ValidationError if invalid → retry
+
                 return result
             except Exception as e:
                 last_error = e
@@ -316,7 +324,7 @@ class BaseAgent:
 
         # Include tool results
         if tool_results:
-            parts.append("\nTOOL RESULTS (real-time data gathered for this analysis):")
+            parts.append("\nTOOL RESULTS (live data when available; may be labelled placeholders if a data source is not configured — do not cite placeholders as fact):")
             for tool_name, result in tool_results.items():
                 parts.append(f"\n--- {tool_name} ---")
                 parts.append(json.dumps(result, indent=2))

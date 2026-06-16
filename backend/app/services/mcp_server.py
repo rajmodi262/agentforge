@@ -47,7 +47,7 @@ class MCPServer:
         return [
             {
                 "name": "startupos_analyze",
-                "description": "Run a full multi-agent startup analysis. Returns a comprehensive business blueprint covering market research, financial projections, technical architecture, marketing strategy, operations plan, and legal compliance.",
+                "description": "Get instructions for starting a full multi-agent startup analysis. The analysis itself runs asynchronously via the StartupOS API; this tool returns the exact endpoints and request body to kick it off and where to stream results.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -145,7 +145,7 @@ class MCPServer:
             {
                 "uri": "startupos://agents",
                 "name": "StartupOS Agents",
-                "description": "List of all 7 specialized AI agents (CEO, Research, Finance, Developer, Marketing, Operations, Legal)",
+                "description": "List of all 7 specialized AI agents (CEO, Research, Marketing, Developer, Finance, Analytics, Operations)",
                 "mimeType": "application/json",
             },
             {
@@ -244,10 +244,12 @@ class MCPServer:
         return {"content": [{"type": "text", "text": json.dumps(agents, indent=2)}]}
 
     async def _tool_search_knowledge(self, args: dict) -> dict:
-        from app.services.rag_service import get_rag_service
-        rag = get_rag_service()
-        results = rag.query(args["query"], n_results=args.get("n_results", 5))
-        return {"content": [{"type": "text", "text": json.dumps(results, indent=2)}]}
+        from app.services.rag_service import retrieve_similar_context
+        results = retrieve_similar_context(
+            query=args["query"],
+            n_results=args.get("n_results", 5),
+        )
+        return {"content": [{"type": "text", "text": json.dumps(results, indent=2, default=str)}]}
 
     async def _tool_get_metrics(self, args: dict, db) -> dict:
         if not db:
