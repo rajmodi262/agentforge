@@ -40,7 +40,9 @@ def _build_real_groq_service():
     svc.provider = "groq"
     svc.gemini_model = None
     svc.groq_model = _GROQ_MODEL
-    svc.client = Groq(api_key=_GROQ_KEY)
+    client = Groq(api_key=_GROQ_KEY)
+    svc.client = client
+    svc._clients = {"groq": client}  # prime the lazy client cache
     return svc
 
 

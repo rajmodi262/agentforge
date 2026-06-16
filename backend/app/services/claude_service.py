@@ -184,25 +184,24 @@ class ClaudeService:
         self.mock_mode = settings.mock_mode
         self.provider = self._resolve_provider()
         self.client = None
-        self.gemini_model = None
-        self.groq_model = None
+        self.gemini_model = settings.gemini_model
+        self.groq_model = settings.groq_model
+        self._clients = {}  # provider -> SDK client (lazy cache for the fallback chain)
 
         if self.mock_mode:
             logger.info("AI Service initialized (MOCK mode — saving API credits)")
             return
 
-        if self.provider == "groq":
-            self._init_groq()
-        elif self.provider == "gemini":
-            self._init_gemini()
-        elif self.provider == "claude":
-            self._init_claude()
-        else:
-            logger.warning("No AI provider available, falling back to mock mode")
+        # Initialize the primary provider's client; alternates are lazy-initialized
+        self.client = self._get_client(self.provider)
+        if self.client is None:
+            logger.warning("No AI provider client available — falling back to mock mode")
             self.mock_mode = True
+        else:
+            logger.info(f"AI Service initialized (primary provider={self.provider})")
 
     def _resolve_provider(self) -> str:
-        """Determine which AI provider to use."""
+        """Determine the primary AI provider."""
         if self.mock_mode:
             return "mock"
 
@@ -223,48 +222,47 @@ class ClaudeService:
                 return "claude"
         return "mock"
 
-    def _init_groq(self):
-        """Initialize Groq client (fast Llama inference)."""
-        try:
-            from groq import Groq
-            self.client = Groq(api_key=settings.groq_api_key)
-            self.groq_model = settings.groq_model
-            logger.info(f"Groq AI client initialized (model={self.groq_model})")
-        except ImportError:
-            logger.warning("groq package not installed. Install with: pip install groq")
-            logger.warning("Falling back to mock mode")
-            self.mock_mode = True
-        except Exception as e:
-            logger.error(f"Groq init error: {e}")
-            self.mock_mode = True
+    @staticmethod
+    def _provider_key(provider: str) -> str:
+        return {
+            "groq": settings.groq_api_key,
+            "gemini": settings.gemini_api_key,
+            "claude": settings.anthropic_api_key,
+        }.get(provider, "")
 
-    def _init_gemini(self):
-        """Initialize Google Gemini client."""
-        try:
-            from google import genai
-            self.client = genai.Client(api_key=settings.gemini_api_key)
-            self.gemini_model = settings.gemini_model
-            logger.info(f"Gemini AI client initialized (model={self.gemini_model})")
-        except ImportError:
-            logger.warning("google-genai package not installed. Install with: pip install google-genai")
-            logger.warning("Falling back to mock mode")
-            self.mock_mode = True
-        except Exception as e:
-            logger.error(f"Gemini init error: {e}")
-            self.mock_mode = True
+    def _provider_chain(self) -> list:
+        """Ordered providers to try: primary first, then any other with a key."""
+        chain = []
+        if self.provider in ("groq", "gemini", "claude"):
+            chain.append(self.provider)
+        for p in ("groq", "gemini", "claude"):
+            if p not in chain and self._provider_key(p):
+                chain.append(p)
+        return chain
 
-    def _init_claude(self):
-        """Initialize Anthropic Claude client."""
+    def _get_client(self, provider: str):
+        """Lazily create and cache the SDK client for a provider (or None)."""
+        if provider in self._clients:
+            return self._clients[provider]
+
+        client = None
         try:
-            from anthropic import Anthropic
-            self.client = Anthropic(api_key=settings.anthropic_api_key)
-            logger.info(f"Claude AI client initialized (model={settings.claude_model})")
-        except ImportError:
-            logger.warning("anthropic package not installed, falling back to mock mode")
-            self.mock_mode = True
+            if provider == "groq" and settings.groq_api_key:
+                from groq import Groq
+                client = Groq(api_key=settings.groq_api_key)
+            elif provider == "gemini" and settings.gemini_api_key:
+                from google import genai
+                client = genai.Client(api_key=settings.gemini_api_key)
+            elif provider == "claude" and settings.anthropic_api_key:
+                from anthropic import Anthropic
+                client = Anthropic(api_key=settings.anthropic_api_key)
+        except ImportError as e:
+            logger.warning(f"{provider} SDK not installed: {e}")
         except Exception as e:
-            logger.error(f"Claude init error: {e}")
-            self.mock_mode = True
+            logger.warning(f"{provider} client init failed: {e}")
+
+        self._clients[provider] = client
+        return client
 
     async def generate(
         self,
@@ -281,17 +279,25 @@ class ClaudeService:
         if self.mock_mode:
             return await self._mock_generate(agent_name, user_message)
 
-        try:
-            if self.provider == "groq":
-                return await self._groq_generate(system_prompt, user_message, max_tokens)
-            elif self.provider == "gemini":
-                return await self._gemini_generate(system_prompt, user_message, max_tokens)
-            else:
-                return await self._claude_generate(system_prompt, user_message, max_tokens)
-        except Exception as e:
-            logger.error(f"AI generation error ({self.provider}): {e}")
-            logger.warning("Falling back to mock mode for this request")
-            return await self._mock_generate(agent_name, user_message)
+        # Try each available provider in order, then fall back to mock
+        last_err = None
+        for provider in self._provider_chain():
+            client = self._get_client(provider)
+            if client is None:
+                continue
+            try:
+                if provider == "groq":
+                    return await self._groq_generate(client, system_prompt, user_message, max_tokens)
+                elif provider == "gemini":
+                    return await self._gemini_generate(client, system_prompt, user_message, max_tokens)
+                else:
+                    return await self._claude_generate(client, system_prompt, user_message, max_tokens)
+            except Exception as e:
+                last_err = e
+                logger.warning(f"Provider '{provider}' failed: {e} — trying next")
+
+        logger.error(f"All providers failed ({last_err}) — falling back to mock for this request")
+        return await self._mock_generate(agent_name, user_message)
 
     async def generate_structured(
         self,
@@ -313,75 +319,122 @@ class ClaudeService:
         if self.mock_mode:
             return await self._mock_generate(agent_name, user_message)
 
-        # Only Claude supports tool_use natively; Gemini uses response_mime_type
-        if self.provider != "claude" or not self.client:
-            # Fallback: regular generate + JSON parse
-            result = await self.generate(system_prompt, user_message, agent_name, max_tokens)
-            return result
-
+        # Use the provider's native function/tool calling where supported,
+        # validating against the Pydantic model. Anything else (or any failure)
+        # falls back to JSON-mode generate() + downstream parsing.
         try:
-            import json as _json
-            tool_schema = output_model.model_json_schema()
-            # Remove pydantic-specific keys that Claude doesn't need
-            tool_schema.pop("title", None)
-
-            tool_def = {
-                "name": "submit_analysis",
-                "description": f"Submit the {agent_name} structured analysis output",
-                "input_schema": tool_schema,
-            }
-
-            response = await asyncio.to_thread(
-                self.client.messages.create,
-                model=settings.claude_model,
-                max_tokens=max_tokens,
-                system=system_prompt,
-                tools=[tool_def],
-                tool_choice={"type": "tool", "name": "submit_analysis"},
-                messages=[{"role": "user", "content": user_message}],
-            )
-
-            # Extract the tool_use block and any text blocks (thinking)
-            tool_output = None
-            thought_text = ""
-            for block in response.content:
-                if block.type == "text":
-                    thought_text += block.text + "\n"
-                elif block.type == "tool_use":
-                    tool_output = block.input
-                    break
-
-            if tool_output is None:
-                # Fallback: try text content
-                for block in response.content:
-                    if hasattr(block, "text"):
-                        try:
-                            tool_output = _json.loads(block.text)
-                            break
-                        except Exception:
-                            pass
-
-            if tool_output is None:
-                raise ValueError("No tool_use or text block found in Claude response")
-
-            # Validate via Pydantic
-            validated = output_model(**tool_output)
-
-            input_tokens = response.usage.input_tokens
-            output_tokens = response.usage.output_tokens
-            total_tokens = input_tokens + output_tokens
-            cost = (input_tokens * 3.0 / 1_000_000) + (output_tokens * 15.0 / 1_000_000)
-
-            return {
-                "content": _json.dumps(validated.model_dump()),
-                "thought": thought_text.strip(),
-                "tokens_used": total_tokens,
-                "cost": cost,
-            }
-
+            if self.provider == "claude":
+                client = self._get_client("claude")
+                if client is not None:
+                    return await self._claude_generate_structured(
+                        client, system_prompt, user_message, output_model, agent_name, max_tokens
+                    )
+            elif self.provider == "groq":
+                client = self._get_client("groq")
+                if client is not None:
+                    return await self._groq_generate_structured(
+                        client, system_prompt, user_message, output_model, agent_name, max_tokens
+                    )
         except Exception as e:
             logger.warning(f"Structured generation failed for {agent_name}: {e}, falling back to regular")
-            return await self.generate(system_prompt, user_message, agent_name, max_tokens)
+
+        return await self.generate(system_prompt, user_message, agent_name, max_tokens)
+
+    async def _claude_generate_structured(self, client, system_prompt, user_message, output_model, agent_name, max_tokens):
+        """Claude structured output via tool_use, validated with Pydantic."""
+        import json as _json
+        tool_schema = output_model.model_json_schema()
+        tool_schema.pop("title", None)
+
+        tool_def = {
+            "name": "submit_analysis",
+            "description": f"Submit the {agent_name} structured analysis output",
+            "input_schema": tool_schema,
+        }
+
+        response = await asyncio.to_thread(
+            client.messages.create,
+            model=settings.claude_model,
+            max_tokens=max_tokens,
+            system=system_prompt,
+            tools=[tool_def],
+            tool_choice={"type": "tool", "name": "submit_analysis"},
+            messages=[{"role": "user", "content": user_message}],
+        )
+
+        tool_output = None
+        thought_text = ""
+        for block in response.content:
+            if block.type == "text":
+                thought_text += block.text + "\n"
+            elif block.type == "tool_use":
+                tool_output = block.input
+                break
+
+        if tool_output is None:
+            raise ValueError("No tool_use block found in Claude response")
+
+        validated = output_model(**tool_output)
+        input_tokens = response.usage.input_tokens
+        output_tokens = response.usage.output_tokens
+        total_tokens = input_tokens + output_tokens
+        cost = (input_tokens * 3.0 / 1_000_000) + (output_tokens * 15.0 / 1_000_000)
+
+        return {
+            "content": _json.dumps(validated.model_dump()),
+            "thought": thought_text.strip(),
+            "tokens_used": total_tokens,
+            "cost": cost,
+        }
+
+    async def _groq_generate_structured(self, client, system_prompt, user_message, output_model, agent_name, max_tokens):
+        """Groq structured output via function calling, validated with Pydantic."""
+        import json as _json
+        schema = output_model.model_json_schema()
+        schema.pop("title", None)
+
+        tool_def = {
+            "type": "function",
+            "function": {
+                "name": "submit_analysis",
+                "description": f"Submit the {agent_name} structured analysis output",
+                "parameters": schema,
+            },
+        }
+
+        response = await asyncio.to_thread(
+            client.chat.completions.create,
+            model=self.groq_model,
+            max_tokens=max_tokens,
+            temperature=0.4,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            tools=[tool_def],
+            tool_choice={"type": "function", "function": {"name": "submit_analysis"}},
+        )
+
+        message = response.choices[0].message
+        if not getattr(message, "tool_calls", None):
+            raise ValueError("Groq returned no tool call")
+
+        raw_args = message.tool_calls[0].function.arguments
+        data = _json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+        validated = output_model(**data)
+
+        usage = response.usage
+        input_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        output_tokens = getattr(usage, "completion_tokens", 0) or 0
+        total_tokens = input_tokens + output_tokens
+        cost = (input_tokens * 0.59 / 1_000_000) + (output_tokens * 0.79 / 1_000_000)
+
+        return {
+            "content": _json.dumps(validated.model_dump()),
+            "thought": "",
+            "tokens_used": total_tokens,
+            "cost": cost,
+        }
 
     async def generate_critique(
         self,
@@ -438,6 +491,7 @@ class ClaudeService:
     )
     async def _groq_generate(
         self,
+        client,
         system_prompt: str,
         user_message: str,
         max_tokens: int,
@@ -453,7 +507,7 @@ class ClaudeService:
         )
 
         response = await asyncio.to_thread(
-            self.client.chat.completions.create,
+            client.chat.completions.create,
             model=self.groq_model,
             max_tokens=max_tokens,
             temperature=0.4,  # Lower temp for reliable structured JSON output
@@ -492,6 +546,7 @@ class ClaudeService:
     )
     async def _gemini_generate(
         self,
+        client,
         system_prompt: str,
         user_message: str,
         max_tokens: int,
@@ -505,7 +560,7 @@ class ClaudeService:
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(
             None,
-            lambda: self.client.models.generate_content(
+            lambda: client.models.generate_content(
                 model=self.gemini_model,
                 contents=combined_prompt,
                 config=types.GenerateContentConfig(
@@ -554,6 +609,7 @@ class ClaudeService:
     )
     async def _claude_generate(
         self,
+        client,
         system_prompt: str,
         user_message: str,
         max_tokens: int,
@@ -561,7 +617,7 @@ class ClaudeService:
         """Make a real Anthropic Claude API call (non-blocking)."""
         # Run sync Anthropic SDK call in a thread to avoid blocking the event loop
         response = await asyncio.to_thread(
-            self.client.messages.create,
+            client.messages.create,
             model=settings.claude_model,
             max_tokens=max_tokens,
             system=system_prompt,
