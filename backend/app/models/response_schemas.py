@@ -1,6 +1,6 @@
 """AgentForge AI — Pydantic Response Schemas"""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List, Any
 from datetime import datetime
 from uuid import UUID
@@ -18,8 +18,7 @@ class UserResponse(BaseModel):
     name: Optional[str]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # --- Projects ---
@@ -34,8 +33,7 @@ class ProjectResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectListResponse(BaseModel):
@@ -54,8 +52,7 @@ class WorkflowResponse(BaseModel):
     total_cost: float  # Changed from str to float
     error_message: Optional[str]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AgentTaskResponse(BaseModel):
@@ -68,8 +65,7 @@ class AgentTaskResponse(BaseModel):
     started_at: Optional[datetime]
     completed_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AgentMessageResponse(BaseModel):
@@ -80,8 +76,7 @@ class AgentMessageResponse(BaseModel):
     content: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class WorkflowDetailResponse(BaseModel):
