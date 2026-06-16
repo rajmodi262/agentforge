@@ -14,6 +14,8 @@ Graph topology:
 
 import os
 import time
+import uuid
+import asyncio
 import logging
 from typing import TypedDict, Optional, Dict, Any, List, Annotated
 from datetime import datetime, timezone
@@ -81,6 +83,151 @@ class WorkflowState(TypedDict):
     session_factory: Optional[Any]
 
 
+# ─────────────────────── DB helpers (run via asyncio.to_thread) ───────────────────────
+# These wrap blocking SQLAlchemy work so it never runs on the event loop. Each
+# helper opens, uses, and closes its OWN session, so nothing is shared across
+# threads — safe under the parallel fan-out of agent nodes.
+
+def _db_create_agent_task(factory, task_id, workflow_id, agent_name):
+    db: Session = factory()
+    try:
+        db.add(AgentTask(
+            id=task_id,
+            workflow_id=workflow_id,
+            agent_name=agent_name,
+            status="running",
+            started_at=datetime.now(timezone.utc),
+        ))
+        db.commit()
+    finally:
+        db.close()
+
+
+def _db_record_handoff(factory, workflow_id, sender, recipient):
+    db: Session = factory()
+    try:
+        db.add(AgentMessage(
+            workflow_id=workflow_id,
+            sender=sender,
+            recipient=recipient,
+            message_type="data",
+            content=f"Passing {sender} analysis to {recipient} for cross-referencing.",
+        ))
+        db.commit()
+    finally:
+        db.close()
+
+
+def _db_complete_agent_task(factory, task_id, output_data, tokens_used, execution_time):
+    db: Session = factory()
+    try:
+        task = db.query(AgentTask).filter(AgentTask.id == task_id).first()
+        if task:
+            task.status = "completed"
+            task.output_data = output_data
+            task.tokens_used = tokens_used
+            task.execution_time = execution_time
+            task.completed_at = datetime.now(timezone.utc)
+            db.commit()
+    finally:
+        db.close()
+
+
+def _db_fail_agent_task(factory, task_id):
+    db: Session = factory()
+    try:
+        task = db.query(AgentTask).filter(AgentTask.id == task_id).first()
+        if task:
+            task.status = "failed"
+            task.completed_at = datetime.now(timezone.utc)
+            db.commit()
+    finally:
+        db.close()
+
+
+def _store_rag(project_id, agent_name, output, workflow_id):
+    from app.services.rag_service import store_agent_output
+    store_agent_output(
+        project_id=project_id,
+        agent_name=agent_name,
+        output=output,
+        workflow_id=workflow_id,
+    )
+
+
+def _build_and_persist_report(factory, project_id, brief, agent_outputs):
+    compiler = ReportCompiler()
+    context = {"brief": brief}
+    context.update(agent_outputs)
+
+    report_json = compiler.compile_json(context)
+    report_filename = f"AgentForge_Report_{project_id[:8]}_{int(time.time())}.pdf"
+    absolute_path = os.path.join(REPORTS_DIR, report_filename)
+    actual_path = compiler.generate_pdf(report_json, absolute_path)
+
+    file_size = os.path.getsize(actual_path) if os.path.exists(actual_path) else 0
+    db: Session = factory()
+    try:
+        db.add(ProjectReport(
+            project_id=project_id,
+            file_path=report_filename,
+            file_size=file_size,
+        ))
+        db.commit()
+    finally:
+        db.close()
+    return actual_path
+
+
+def _db_mark_workflow_running(factory, workflow_id) -> bool:
+    db: Session = factory()
+    try:
+        wf = db.query(WorkflowRun).filter(WorkflowRun.id == workflow_id).first()
+        if not wf:
+            return False
+        wf.status = "running"
+        wf.started_at = datetime.now(timezone.utc)
+        db.commit()
+        return True
+    finally:
+        db.close()
+
+
+def _db_finalize_workflow(factory, workflow_id, project_id, total_tokens, total_cost, error_messages):
+    db: Session = factory()
+    try:
+        wf = db.query(WorkflowRun).filter(WorkflowRun.id == workflow_id).first()
+        if wf:
+            wf.status = "completed"
+            wf.completed_at = datetime.now(timezone.utc)
+            wf.total_tokens = total_tokens
+            wf.total_cost = total_cost
+            if error_messages:
+                wf.error_message = "; ".join(error_messages)
+        project = db.query(Project).filter(Project.id == project_id).first()
+        if project:
+            project.status = "completed"
+        db.commit()
+    finally:
+        db.close()
+
+
+def _db_mark_workflow_failed(factory, workflow_id, project_id, error):
+    db: Session = factory()
+    try:
+        wf = db.query(WorkflowRun).filter(WorkflowRun.id == workflow_id).first()
+        if wf:
+            wf.status = "failed"
+            wf.error_message = error
+            wf.completed_at = datetime.now(timezone.utc)
+        project = db.query(Project).filter(Project.id == project_id).first()
+        if project:
+            project.status = "error"
+        db.commit()
+    finally:
+        db.close()
+
+
 # ─────────────────────────── Node Functions ───────────────────────────
 
 def _make_agent_node(agent_key: str, AgentClass):
@@ -98,43 +245,30 @@ def _make_agent_node(agent_key: str, AgentClass):
         agent = AgentClass()
         workflow_id = state["workflow_id"]
         factory = state.get("session_factory") or get_session_factory()
-        db: Session = factory()
+
+        # Build context from accumulated outputs (no DB / no I/O)
+        context = {"brief": state["brief"]}
+        context.update(state.get("agent_outputs", {}))
+
+        # Build full brief
+        brief = state["brief"]
+        if state.get("target_market"):
+            brief += f"\nTarget Market: {state['target_market']}"
+        if state.get("budget_range"):
+            brief += f"\nBudget Range: {state['budget_range']}"
+
+        # Mint the task id up front so we can update it later without a shared session
+        task_id = uuid.uuid4()
 
         try:
-            # Build context from accumulated outputs
-            context = {"brief": state["brief"]}
-            context.update(state.get("agent_outputs", {}))
-
-            # Build full brief
-            brief = state["brief"]
-            if state.get("target_market"):
-                brief += f"\nTarget Market: {state['target_market']}"
-            if state.get("budget_range"):
-                brief += f"\nBudget Range: {state['budget_range']}"
-
-            # Create DB task record
-            agent_task = AgentTask(
-                workflow_id=workflow_id,
-                agent_name=agent.name,
-                status="running",
-                started_at=datetime.now(timezone.utc),
-            )
-            db.add(agent_task)
-            db.commit()
+            # Create DB task record (offloaded — never blocks the event loop)
+            await asyncio.to_thread(_db_create_agent_task, factory, task_id, workflow_id, agent.name)
 
             # Send inter-agent handoff message
             completed = state.get("completed_agents", [])
             if completed:
                 prev_name = completed[-1]
-                msg = AgentMessage(
-                    workflow_id=workflow_id,
-                    sender=prev_name,
-                    recipient=agent.name,
-                    message_type="data",
-                    content=f"Passing {prev_name} analysis to {agent.name} for cross-referencing.",
-                )
-                db.add(msg)
-                db.commit()
+                await asyncio.to_thread(_db_record_handoff, factory, workflow_id, prev_name, agent.name)
                 await ws_manager.send_inter_agent_message(
                     workflow_id, prev_name, agent.name,
                     f"Handing off to {agent.name}..."
@@ -147,22 +281,16 @@ def _make_agent_node(agent_key: str, AgentClass):
                 workflow_id=workflow_id,
             )
 
-            # Update DB task
-            agent_task.status = "completed"
-            agent_task.output_data = result["output"]
-            agent_task.tokens_used = result["tokens_used"]
-            agent_task.execution_time = result["execution_time"]
-            agent_task.completed_at = datetime.now(timezone.utc)
-            db.commit()
+            # Update DB task (offloaded)
+            await asyncio.to_thread(
+                _db_complete_agent_task, factory, task_id,
+                result["output"], result["tokens_used"], result["execution_time"],
+            )
 
-            # Store in RAG pipeline for future context enrichment
+            # Store in RAG pipeline for future context enrichment (blocking I/O — offloaded)
             try:
-                from app.services.rag_service import store_agent_output
-                store_agent_output(
-                    project_id=state["project_id"],
-                    agent_name=agent.name,
-                    output=result["output"],
-                    workflow_id=workflow_id,
+                await asyncio.to_thread(
+                    _store_rag, state["project_id"], agent.name, result["output"], workflow_id
                 )
             except Exception as rag_err:
                 logger.debug(f"RAG store skipped: {rag_err}")
@@ -178,10 +306,7 @@ def _make_agent_node(agent_key: str, AgentClass):
 
         except Exception as e:
             logger.error(f"[LangGraph] Node '{agent_key}' failed: {e}")
-            agent_task.status = "failed"
-            agent_task.completed_at = datetime.now(timezone.utc)
-            db.commit()
-
+            await asyncio.to_thread(_db_fail_agent_task, factory, task_id)
             await ws_manager.send_workflow_error(workflow_id, agent.name, str(e))
 
             return {
@@ -189,9 +314,6 @@ def _make_agent_node(agent_key: str, AgentClass):
                 "completed_agents": [agent.name],
                 "error_messages": [f"{agent.name}: {str(e)}"],
             }
-
-        finally:
-            db.close()
 
     # Set the function name for LangGraph's internal tracking
     node_fn.__name__ = f"node_{agent_key}"
@@ -203,7 +325,6 @@ async def report_node(state: WorkflowState) -> dict:
     workflow_id = state["workflow_id"]
     project_id = state["project_id"]
     factory = state.get("session_factory") or get_session_factory()
-    db: Session = factory()
 
     try:
         await ws_manager.send_agent_thinking(
@@ -211,33 +332,18 @@ async def report_node(state: WorkflowState) -> dict:
             "Compiling all agent outputs into final report..."
         )
 
-        compiler = ReportCompiler()
-        context = {"brief": state["brief"]}
-        context.update(state.get("agent_outputs", {}))
-
-        report_json = compiler.compile_json(context)
-        report_filename = f"AgentForge_Report_{project_id[:8]}_{int(time.time())}.pdf"
-        absolute_path = os.path.join(REPORTS_DIR, report_filename)
-        actual_path = compiler.generate_pdf(report_json, absolute_path)
-
-        file_size = os.path.getsize(actual_path) if os.path.exists(actual_path) else 0
-        report_record = ProjectReport(
-            project_id=project_id,
-            file_path=report_filename,
-            file_size=file_size,
+        # PDF generation + DB persist are blocking — offload to a worker thread
+        actual_path = await asyncio.to_thread(
+            _build_and_persist_report,
+            factory, project_id, state["brief"], state.get("agent_outputs", {}),
         )
-        db.add(report_record)
-        db.commit()
 
-        logger.info(f"[LangGraph] Report generated: {actual_path} ({file_size} bytes)")
+        logger.info(f"[LangGraph] Report generated: {actual_path}")
         return {"report_path": actual_path}
 
     except Exception as e:
         logger.error(f"[LangGraph] Report generation failed: {e}")
         return {"error_messages": [f"Report: {str(e)}"]}
-
-    finally:
-        db.close()
 
 
 # ─────────────────────────── Graph Construction ───────────────────────────
@@ -333,18 +439,13 @@ async def run_workflow(
     execution of all agent nodes + report generation.
     """
     factory = session_factory or get_session_factory()
-    db: Session = factory()
 
     try:
-        # Mark workflow as running
-        workflow = db.query(WorkflowRun).filter(WorkflowRun.id == workflow_id).first()
-        if not workflow:
+        # Mark workflow as running (offloaded)
+        found = await asyncio.to_thread(_db_mark_workflow_running, factory, workflow_id)
+        if not found:
             logger.error(f"Workflow {workflow_id} not found in database")
             return
-
-        workflow.status = "running"
-        workflow.started_at = datetime.now(timezone.utc)
-        db.commit()
 
         # Build initial state
         initial_state: WorkflowState = {
@@ -366,22 +467,13 @@ async def run_workflow(
         logger.info(f"[LangGraph] Starting workflow {workflow_id}")
         final_state = await workflow_graph.ainvoke(initial_state)
 
-        # Update workflow completion
-        workflow.status = "completed"
-        workflow.completed_at = datetime.now(timezone.utc)
-        workflow.total_tokens = final_state.get("total_tokens", 0)
-        workflow.total_cost = final_state.get("total_cost", 0.0)
-
-        if final_state.get("error_messages"):
-            workflow.error_message = "; ".join(final_state["error_messages"])
-
-        db.commit()
-
-        # Update project status
-        project = db.query(Project).filter(Project.id == project_id).first()
-        if project:
-            project.status = "completed"
-            db.commit()
+        # Persist completion (workflow + project) — offloaded
+        await asyncio.to_thread(
+            _db_finalize_workflow, factory, workflow_id, project_id,
+            final_state.get("total_tokens", 0),
+            final_state.get("total_cost", 0.0),
+            final_state.get("error_messages"),
+        )
 
         # Notify frontend
         await ws_manager.send_workflow_completed(
@@ -400,19 +492,5 @@ async def run_workflow(
 
     except Exception as e:
         logger.error(f"[LangGraph] Workflow {workflow_id} failed: {e}", exc_info=True)
-        workflow = db.query(WorkflowRun).filter(WorkflowRun.id == workflow_id).first()
-        if workflow:
-            workflow.status = "failed"
-            workflow.error_message = str(e)
-            workflow.completed_at = datetime.now(timezone.utc)
-            db.commit()
-
-        project = db.query(Project).filter(Project.id == project_id).first()
-        if project:
-            project.status = "error"
-            db.commit()
-
+        await asyncio.to_thread(_db_mark_workflow_failed, factory, workflow_id, project_id, str(e))
         await ws_manager.send_workflow_error(workflow_id, "LangGraph Orchestrator", str(e))
-
-    finally:
-        db.close()
