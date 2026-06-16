@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Dashboard Layout
+ * AgentForge AI — Dashboard Layout
  * 
  * Glassmorphic sidebar + header shell for all dashboard pages.
  */
@@ -57,7 +57,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}>
-            StartupOS
+            AgentForge
           </div>
           <div style={{ fontSize: '0.65rem', color: colors.textMuted, marginTop: '2px', letterSpacing: '0.05em' }}>
             AI PLATFORM

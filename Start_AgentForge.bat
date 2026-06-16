@@ -1,9 +1,9 @@
 @echo off
 SETLOCAL EnableDelayedExpansion
-title StartupOS AI Launcher
+title AgentForge AI Launcher
 
 echo ===================================================
-echo     StartupOS AI - Initialization ^& Startup
+echo     AgentForge AI - Initialization ^& Startup
 echo ===================================================
 echo.
 
@@ -58,10 +58,10 @@ if not exist "node_modules\" (
 echo [4/4] Starting Servers...
 
 echo Starting FastAPI Backend...
-start "StartupOS Backend" cmd /k "cd /d "%~dp0backend" && call venv\Scripts\activate.bat && uvicorn app.main:app --reload --port 8000"
+start "AgentForge Backend" cmd /k "cd /d "%~dp0backend" && call venv\Scripts\activate.bat && uvicorn app.main:app --reload --port 8000"
 
 echo Starting React Frontend...
-start "StartupOS Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
+start "AgentForge Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
 
 echo.
 echo ===================================================

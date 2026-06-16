@@ -104,7 +104,7 @@ export function DashboardPreview() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '32px', height: '32px', background: gradients.hero, borderRadius: radii.sm }} />
-            <span style={{ fontFamily: typography.fontFamily, fontWeight: typography.bold, fontSize: '16px', color: colors.white }}>StartupOS Dashboard</span>
+            <span style={{ fontFamily: typography.fontFamily, fontWeight: typography.bold, fontSize: '16px', color: colors.white }}>AgentForge Dashboard</span>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {['Overview', 'Agents', 'Blueprint', 'Export'].map((tab, i) => (

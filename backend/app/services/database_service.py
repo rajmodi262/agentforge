@@ -1,4 +1,4 @@
-"""StartupOS AI — Database Service (CRUD Operations)"""
+"""AgentForge AI — Database Service (CRUD Operations)"""
 
 import logging
 from uuid import UUID

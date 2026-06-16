@@ -1,4 +1,4 @@
-"""StartupOS AI — Finance Agent
+"""AgentForge AI — Finance Agent
 
 Uses Calculator tool to validate financial projections.
 """
@@ -46,7 +46,7 @@ class FinanceAgent(BaseAgent):
     required_context_keys = ["ceo", "research", "marketing", "developer"]
     tools = [("financial_calculator", _validate_financials)]
 
-    system_prompt = """You are the Finance Agent of StartupOS AI. You are a startup CFO who has managed
+    system_prompt = """You are the Finance Agent of AgentForge AI. You are a startup CFO who has managed
 finances for 3 funded startups from pre-seed to Series A.
 
 YOUR ROLE:

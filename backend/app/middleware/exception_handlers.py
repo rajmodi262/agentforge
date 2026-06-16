@@ -1,4 +1,4 @@
-"""StartupOS AI — Global Exception Handlers
+"""AgentForge AI — Global Exception Handlers
 
 Catches unhandled exceptions and returns structured JSON errors
 with request IDs for traceability. Safely skips errors that occur

@@ -1,4 +1,4 @@
-"""StartupOS AI — Research Agent
+"""AgentForge AI — Research Agent
 
 Uses Brave Search API to gather real market intelligence.
 """
@@ -40,7 +40,7 @@ class ResearchAgent(BaseAgent):
     required_context_keys = ["ceo"]
     tools = [("web_search", _research_web_search)]
 
-    system_prompt = """You are the Research Agent of StartupOS AI. You are the market intelligence specialist.
+    system_prompt = """You are the Research Agent of AgentForge AI. You are the market intelligence specialist.
 
 YOUR ROLE:
 Transform the CEO's brief into hard market intelligence. Find real data, real competitors,

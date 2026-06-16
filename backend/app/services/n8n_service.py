@@ -1,17 +1,17 @@
-"""StartupOS AI — n8n Integration Service
+"""AgentForge AI — n8n Integration Service
 
-Connects StartupOS AI to n8n's 400+ integrations via webhooks.
+Connects AgentForge AI to n8n's 400+ integrations via webhooks.
 This gives us Slack, Gmail, Notion, Google Sheets, Airtable, 
 Jira, Trello, Discord, Telegram, and hundreds more — without
 building a single integration ourselves.
 
 Architecture:
-    StartupOS Agent completes → fires webhook → n8n picks up
-    n8n can trigger workflows via our API → StartupOS processes
+    AgentForge Agent completes → fires webhook → n8n picks up
+    n8n can trigger workflows via our API → AgentForge processes
 
 Use Cases:
     1. Post-workflow: Send results to Slack, create Notion page
-    2. Trigger: GitHub issue → StartupOS analyzes the startup idea
+    2. Trigger: GitHub issue → AgentForge analyzes the startup idea
     3. Export: Push analysis data to Google Sheets, Airtable
     4. Notify: Email/SMS/Discord when workflow completes
 """
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class N8nService:
-    """Integration layer between StartupOS AI and n8n.
+    """Integration layer between AgentForge AI and n8n.
     
     n8n provides 400+ integrations via webhooks.
     We fire events → n8n routes them to any service.
@@ -108,7 +108,7 @@ class N8nService:
                     webhook_url,
                     json={
                         "event": event_type,
-                        "source": "startupos-ai",
+                        "source": "agentforge-ai",
                         "timestamp": __import__("datetime").datetime.now(
                             __import__("datetime").timezone.utc
                         ).isoformat(),
@@ -116,7 +116,7 @@ class N8nService:
                     },
                     headers={
                         "Content-Type": "application/json",
-                        "User-Agent": "StartupOS-AI/1.0",
+                        "User-Agent": "AgentForge-AI/1.0",
                     },
                 )
                 

@@ -1,4 +1,4 @@
-"""StartupOS AI — Knowledge Base API (Phase 3)
+"""AgentForge AI — Knowledge Base API (Phase 3)
 
 Full RAG knowledge management with DB persistence:
 - Document upload (PDF, MD, TXT)

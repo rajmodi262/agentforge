@@ -1,4 +1,4 @@
-"""StartupOS AI — Agent Output Models (Pydantic v2)
+"""AgentForge AI — Agent Output Models (Pydantic v2)
 
 Strict Pydantic models for each agent's output.
 Used for:

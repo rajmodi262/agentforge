@@ -1,4 +1,4 @@
-"""StartupOS AI — LangGraph Workflow Engine (v2: Parallel + Board Meeting)
+"""AgentForge AI — LangGraph Workflow Engine (v2: Parallel + Board Meeting)
 
 Production-grade multi-agent orchestrator with:
 - Parallel fan-out/fan-in execution (Marketing, Developer, Finance run simultaneously)
@@ -216,7 +216,7 @@ async def report_node(state: WorkflowState) -> dict:
         context.update(state.get("agent_outputs", {}))
 
         report_json = compiler.compile_json(context)
-        report_filename = f"StartupOS_Report_{project_id[:8]}_{int(time.time())}.pdf"
+        report_filename = f"AgentForge_Report_{project_id[:8]}_{int(time.time())}.pdf"
         absolute_path = os.path.join(REPORTS_DIR, report_filename)
         actual_path = compiler.generate_pdf(report_json, absolute_path)
 
@@ -256,7 +256,7 @@ AGENT_PIPELINE = [
 
 
 def build_workflow_graph() -> StateGraph:
-    """Construct the StartupOS 9-node LangGraph with parallel execution.
+    """Construct the AgentForge 9-node LangGraph with parallel execution.
     
     Graph topology (diamond with parallel fan-out/fan-in):
     

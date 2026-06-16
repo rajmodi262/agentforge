@@ -1,4 +1,4 @@
-"""StartupOS AI — Web Search Tool (Brave Search API)"""
+"""AgentForge AI — Web Search Tool (Brave Search API)"""
 
 import logging
 from typing import List, Dict

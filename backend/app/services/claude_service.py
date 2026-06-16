@@ -1,4 +1,4 @@
-"""StartupOS AI — AI Service (Claude + Gemini with Dynamic Mock Fallback)
+"""AgentForge AI — AI Service (Claude + Gemini with Dynamic Mock Fallback)
 
 Supports Claude (Anthropic) and Gemini (Google) as AI providers.
 Auto-selects the best available provider based on configured API keys.

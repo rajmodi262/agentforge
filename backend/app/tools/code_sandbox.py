@@ -1,4 +1,4 @@
-"""StartupOS AI — Sandboxed Code Execution Tool
+"""AgentForge AI — Sandboxed Code Execution Tool
 
 Provides safe code execution in an isolated subprocess with:
 - Timeout enforcement (default: 10 seconds)

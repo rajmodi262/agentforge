@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Error Boundary
+ * AgentForge AI — Error Boundary
  *
  * Catches React rendering errors and shows a styled fallback
  * instead of a white screen crash.

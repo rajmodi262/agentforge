@@ -1,4 +1,4 @@
-"""StartupOS AI — Workflow Graph Visualization API
+"""AgentForge AI — Workflow Graph Visualization API
 
 Exposes the LangGraph topology as a JSON structure for frontend rendering.
 Also provides a simple ASCII visualization for debugging.

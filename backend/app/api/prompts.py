@@ -1,4 +1,4 @@
-"""StartupOS AI — Prompt Management API (Phase 4)"""
+"""AgentForge AI — Prompt Management API (Phase 4)"""
 
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session

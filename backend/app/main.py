@@ -1,4 +1,4 @@
-"""StartupOS AI — FastAPI Main Application
+"""AgentForge AI — FastAPI Main Application
 
 Production hardened:
 - Request ID middleware for end-to-end tracing
@@ -43,13 +43,13 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     """Startup/shutdown events."""
     init_db()
-    logger.info(f"StartupOS AI started (mock_mode={settings.mock_mode})")
+    logger.info(f"AgentForge AI started (mock_mode={settings.mock_mode})")
     yield
-    logger.info("StartupOS AI shutting down")
+    logger.info("AgentForge AI shutting down")
 
 
 app = FastAPI(
-    title="StartupOS AI",
+    title="AgentForge AI",
     description="Multi-agent AI orchestration for startup business planning",
     version="1.0.0",
     docs_url="/docs",
@@ -72,7 +72,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Trusted hosts — prevent host header attacks
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["localhost", "127.0.0.1", "*.startupos.ai", "testserver"],
+    allowed_hosts=["localhost", "127.0.0.1", "*.agentforge.ai", "testserver"],
 )
 
 # CORS — specific origins, not wildcard
@@ -100,7 +100,7 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/")
 async def root():
     return {
-        "service": "StartupOS AI",
+        "service": "AgentForge AI",
         "version": "1.0.0",
         "status": "running",
         "mock_mode": settings.mock_mode,

@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Login / Register Page
+ * AgentForge AI — Login / Register Page
  * 
  * Glassmorphism card on dark background, matches Landing page aesthetic.
  */
@@ -58,7 +58,7 @@ export default function Login() {
             WebkitTextFillColor: 'transparent',
             letterSpacing: '-0.02em',
           }}>
-            StartupOS
+            AgentForge
           </div>
           <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.25rem' }}>
             AI-Powered Business Planning
@@ -84,7 +84,7 @@ export default function Login() {
           <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 2rem 0' }}>
             {isRegister
               ? 'Start building your startup blueprint'
-              : 'Sign in to your StartupOS dashboard'
+              : 'Sign in to your AgentForge dashboard'
             }
           </p>
 

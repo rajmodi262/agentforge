@@ -1,4 +1,4 @@
-"""StartupOS AI — Admin & Audit API (Phase 5)
+"""AgentForge AI — Admin & Audit API (Phase 5)
 
 SECURITY: All endpoints require admin or owner role.
 """

@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Observability Page
+ * AgentForge AI — Observability Page
  * 
  * LLMOps dashboard: metrics cards, per-agent breakdown, log table, feedback.
  */

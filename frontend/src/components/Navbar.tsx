@@ -12,7 +12,7 @@ export default function Navbar({ scrollProgress }: NavbarProps) {
     <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''}`}>
       <a href="#" className="navbar__logo">
         <div className="navbar__logo-icon">⚡</div>
-        StartupOS
+        AgentForge
       </a>
 
       <ul className="navbar__links">

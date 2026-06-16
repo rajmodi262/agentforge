@@ -1,4 +1,4 @@
-"""StartupOS AI — Auth API (JWT Register/Login)
+"""AgentForge AI — Auth API (JWT Register/Login)
 
 Security hardened:
 - bcrypt password hashing (via passlib)

@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — API Service
+ * AgentForge AI — API Service
  *
  * Centralized API client with auth headers, error handling, and typed responses.
  */
@@ -39,15 +39,15 @@ export interface WorkflowStartResponse {
 
 // --- Auth Token Management ---
 function getToken(): string | null {
-  return localStorage.getItem('startupos_token');
+  return localStorage.getItem('agentforge_token');
 }
 
 function setToken(token: string): void {
-  localStorage.setItem('startupos_token', token);
+  localStorage.setItem('agentforge_token', token);
 }
 
 function clearToken(): void {
-  localStorage.removeItem('startupos_token');
+  localStorage.removeItem('agentforge_token');
 }
 
 // --- Core Fetch Wrapper ---

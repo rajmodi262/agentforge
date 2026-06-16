@@ -1,4 +1,4 @@
-"""StartupOS AI — Operations Agent"""
+"""AgentForge AI — Operations Agent"""
 
 from app.agents.base_agent import BaseAgent
 
@@ -7,7 +7,7 @@ class OperationsAgent(BaseAgent):
     name = "Operations Agent"
     required_context_keys = ["ceo", "research", "marketing", "developer", "finance", "analytics"]
 
-    system_prompt = """You are the Operations Agent of StartupOS AI. You are a startup operations manager
+    system_prompt = """You are the Operations Agent of AgentForge AI. You are a startup operations manager
 who has scaled 3 companies from 0 to 100 employees.
 
 YOUR ROLE:

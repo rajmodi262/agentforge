@@ -1,4 +1,4 @@
-"""StartupOS AI — Request ID Middleware
+"""AgentForge AI — Request ID Middleware
 
 Attaches a unique X-Request-ID to every request/response for
 end-to-end tracing through logs, errors, and downstream services.

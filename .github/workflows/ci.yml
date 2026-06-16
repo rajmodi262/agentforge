@@ -1,4 +1,4 @@
-name: StartupOS AI CI/CD
+name: AgentForge AI CI/CD
 
 on:
   push:

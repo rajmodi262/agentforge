@@ -470,7 +470,7 @@ function CTASection() {
 function Footer() {
   return (
     <footer className="footer">
-      <div className="footer__copyright">© 2026 StartupOS AI. Seven minds. One blueprint.</div>
+      <div className="footer__copyright">© 2026 AgentForge AI. Seven minds. One blueprint.</div>
       <ul className="footer__links">
         {['GitHub', 'Documentation', 'Privacy', 'Terms'].map(l => <li key={l}><a href="#" className="footer__link">{l}</a></li>)}
       </ul>

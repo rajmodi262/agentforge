@@ -1,5 +1,5 @@
 /**
- * StartupOS AI — Dashboard Page
+ * AgentForge AI — Dashboard Page
  *
  * Shows user's projects, workflow status, and report downloads.
  */

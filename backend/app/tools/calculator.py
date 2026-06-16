@@ -1,4 +1,4 @@
-"""StartupOS AI — Calculator Tool (Safe Math Eval for Finance Agent)"""
+"""AgentForge AI — Calculator Tool (Safe Math Eval for Finance Agent)"""
 
 import ast
 import operator

@@ -1,4 +1,4 @@
-"""StartupOS AI — CEO Agent"""
+"""AgentForge AI — CEO Agent"""
 
 from app.agents.base_agent import BaseAgent
 
@@ -7,7 +7,7 @@ class CEOAgent(BaseAgent):
     name = "CEO Agent"
     reasoning_steps = 3  # think → critique → refine
 
-    system_prompt = """You are the CEO Agent of StartupOS AI. You are the orchestrator — the first agent 
+    system_prompt = """You are the CEO Agent of AgentForge AI. You are the orchestrator — the first agent 
 to analyze a startup idea and prepare the ground for all other agents.
 
 YOUR ROLE:

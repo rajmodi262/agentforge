@@ -1,4 +1,4 @@
-"""StartupOS AI — Audit Middleware (Phase 5)
+"""AgentForge AI — Audit Middleware (Phase 5)
 
 Auto-logs all mutating API calls (POST, PUT, DELETE) with user context."""
 

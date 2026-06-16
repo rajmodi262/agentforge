@@ -1,4 +1,4 @@
-"""StartupOS AI — Shareable Links API
+"""AgentForge AI — Shareable Links API
 
 Allows generating secure, public share links for generated project reports.
 """
@@ -101,6 +101,6 @@ def download_shared_report(
 
     return FileResponse(
         path=report_path,
-        filename=f"StartupOS_Blueprint_{project.title.replace(' ', '_')}.pdf",
+        filename=f"AgentForge_Blueprint_{project.title.replace(' ', '_')}.pdf",
         media_type="application/pdf"
     )

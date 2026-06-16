@@ -1,4 +1,4 @@
-"""StartupOS AI — BaseAgent Class (v2: Multi-Step Reasoning)
+"""AgentForge AI — BaseAgent Class (v2: Multi-Step Reasoning)
 
 All 7 agents inherit from this class. It handles:
 - Multi-step reasoning: think → critique → refine loop
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAgent:
-    """Base class for all StartupOS AI agents.
+    """Base class for all AgentForge AI agents.
     
     Multi-step reasoning is controlled by `reasoning_steps`:
     - 1: Single-shot (backward compatible — prompt → response)

@@ -1,4 +1,4 @@
-"""StartupOS AI — Workflow API (Status + Results)"""
+"""AgentForge AI — Workflow API (Status + Results)"""
 
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
