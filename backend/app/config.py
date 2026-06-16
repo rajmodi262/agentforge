@@ -6,7 +6,7 @@ Includes startup validation and security checks.
 import os
 import secrets
 import logging
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 from functools import lru_cache
 
@@ -66,10 +66,11 @@ class Settings(BaseSettings):
     rate_limit_register: str = "5/minute"
     rate_limit_global: str = "100/minute"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"  # tolerate documented-but-unused env vars (e.g. SERVER_MODE)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",  # tolerate documented-but-unused env vars (e.g. SERVER_MODE)
+    )
 
     def validate_on_startup(self):
         """Run validation checks after settings are loaded.
