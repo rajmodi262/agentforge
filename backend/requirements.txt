@@ -23,6 +23,9 @@ anthropic==0.42.0
 # Google Gemini API
 google-genai>=1.74.0
 
+# Groq API (fast LLM inference — Llama 3.3 etc.)
+groq>=0.13.0
+
 # Pydantic
 pydantic==2.10.4
 pydantic-settings==2.7.1
