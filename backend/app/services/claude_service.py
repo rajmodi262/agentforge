@@ -185,12 +185,15 @@ class ClaudeService:
         self.provider = self._resolve_provider()
         self.client = None
         self.gemini_model = None
+        self.groq_model = None
 
         if self.mock_mode:
             logger.info("AI Service initialized (MOCK mode — saving API credits)")
             return
 
-        if self.provider == "gemini":
+        if self.provider == "groq":
+            self._init_groq()
+        elif self.provider == "gemini":
             self._init_gemini()
         elif self.provider == "claude":
             self._init_claude()
@@ -204,17 +207,36 @@ class ClaudeService:
             return "mock"
 
         pref = settings.ai_provider.lower()
+        if pref == "groq" and settings.groq_api_key:
+            return "groq"
         if pref == "claude" and settings.anthropic_api_key:
             return "claude"
         if pref == "gemini" and settings.gemini_api_key:
             return "gemini"
         if pref == "auto":
-            # Prefer Gemini (free tier) to save Claude credits
+            # Prefer Groq (fast + generous free tier), then Gemini, then Claude
+            if settings.groq_api_key:
+                return "groq"
             if settings.gemini_api_key:
                 return "gemini"
             if settings.anthropic_api_key:
                 return "claude"
         return "mock"
+
+    def _init_groq(self):
+        """Initialize Groq client (fast Llama inference)."""
+        try:
+            from groq import Groq
+            self.client = Groq(api_key=settings.groq_api_key)
+            self.groq_model = settings.groq_model
+            logger.info(f"Groq AI client initialized (model={self.groq_model})")
+        except ImportError:
+            logger.warning("groq package not installed. Install with: pip install groq")
+            logger.warning("Falling back to mock mode")
+            self.mock_mode = True
+        except Exception as e:
+            logger.error(f"Groq init error: {e}")
+            self.mock_mode = True
 
     def _init_gemini(self):
         """Initialize Google Gemini client."""
@@ -260,7 +282,9 @@ class ClaudeService:
             return await self._mock_generate(agent_name, user_message)
 
         try:
-            if self.provider == "gemini":
+            if self.provider == "groq":
+                return await self._groq_generate(system_prompt, user_message, max_tokens)
+            elif self.provider == "gemini":
                 return await self._gemini_generate(system_prompt, user_message, max_tokens)
             else:
                 return await self._claude_generate(system_prompt, user_message, max_tokens)
@@ -405,6 +429,60 @@ class ClaudeService:
             "thought": f"Analyzing the brief to formulate {agent_name} strategy. Identifying key market parameters and aligning with the CEO's vision. Extracting insights...",
             "tokens_used": random.randint(800, 2500),
             "cost": 0.0,
+        }
+
+    @retry(
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        stop=stop_after_attempt(3),
+        reraise=True
+    )
+    async def _groq_generate(
+        self,
+        system_prompt: str,
+        user_message: str,
+        max_tokens: int,
+    ) -> dict:
+        """Make a real Groq (Llama) API call with JSON output enforced.
+
+        The agent prompts already instruct the model to return JSON, so we use
+        Groq's native JSON mode for reliable, parseable structured output.
+        """
+        # Groq's JSON mode requires the word "json" to appear in the messages.
+        system_with_json = (
+            f"{system_prompt}\n\nIMPORTANT: Respond ONLY with a single valid JSON object."
+        )
+
+        response = await asyncio.to_thread(
+            self.client.chat.completions.create,
+            model=self.groq_model,
+            max_tokens=max_tokens,
+            temperature=0.4,  # Lower temp for reliable structured JSON output
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": system_with_json},
+                {"role": "user", "content": user_message},
+            ],
+        )
+
+        content = response.choices[0].message.content
+        if not content or not content.strip():
+            raise ValueError("Groq returned empty response")
+
+        usage = response.usage
+        input_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        output_tokens = getattr(usage, "completion_tokens", 0) or 0
+        total_tokens = input_tokens + output_tokens
+
+        # Llama 3.3 70B on Groq pricing: ~$0.59/1M input, ~$0.79/1M output
+        cost = (input_tokens * 0.59 / 1_000_000) + (output_tokens * 0.79 / 1_000_000)
+
+        logger.info(f"Groq API call: {total_tokens} tokens, ${cost:.6f}")
+
+        return {
+            "content": content,
+            "thought": "",
+            "tokens_used": total_tokens,
+            "cost": cost,
         }
 
     @retry(

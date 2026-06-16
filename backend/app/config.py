@@ -27,7 +27,11 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
 
-    # AI Provider: "claude" | "gemini" | "auto" (auto picks whichever key is available)
+    # Groq API (fast Llama inference)
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
+
+    # AI Provider: "groq" | "claude" | "gemini" | "auto" (auto picks whichever key is available)
     ai_provider: str = "auto"
 
     # Mock Mode — CRITICAL for development
@@ -87,9 +91,9 @@ class Settings(BaseSettings):
                 )
 
         # API key checks
-        if not self.mock_mode and not self.anthropic_api_key and not self.gemini_api_key:
+        if not self.mock_mode and not self.anthropic_api_key and not self.gemini_api_key and not self.groq_api_key:
             errors.append(
-                "MOCK_MODE is false but no AI API key is set! Set ANTHROPIC_API_KEY or GEMINI_API_KEY, or enable mock mode."
+                "MOCK_MODE is false but no AI API key is set! Set GROQ_API_KEY, ANTHROPIC_API_KEY or GEMINI_API_KEY, or enable mock mode."
             )
 
         if not self.anthropic_api_key or self.anthropic_api_key.startswith("sk-ant-xxxx"):
