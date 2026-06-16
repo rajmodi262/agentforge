@@ -26,6 +26,9 @@ google-genai>=1.74.0
 # Groq API (fast LLM inference — Llama 3.3 etc.)
 groq>=0.13.0
 
+# Model Context Protocol (real stdio MCP server — app/mcp_stdio.py)
+mcp[cli]>=1.2.0
+
 # Pydantic
 pydantic==2.10.4
 pydantic-settings==2.7.1
