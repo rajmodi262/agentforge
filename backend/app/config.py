@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"  # tolerate documented-but-unused env vars (e.g. SERVER_MODE)
 
     def validate_on_startup(self):
         """Run validation checks after settings are loaded.

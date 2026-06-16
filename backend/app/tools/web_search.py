@@ -60,21 +60,27 @@ async def web_search(query: str, count: int = 5) -> List[Dict[str, str]]:
 
 
 def _mock_search(query: str) -> List[Dict[str, str]]:
-    """Return mock search results for development."""
+    """Return clearly-labelled placeholder results when no Brave key is set.
+
+    These are NOT real search results. They are explicitly marked so the LLM
+    does not present them as verified facts. Set BRAVE_SEARCH_API_KEY for real data.
+    """
+    note = "[PLACEHOLDER — no live search configured; do not cite as fact]"
     return [
         {
-            "title": f"Market Report: {query}",
-            "url": "https://example.com/report",
-            "description": f"Comprehensive market analysis for {query}. The market is projected to grow at 25% CAGR.",
+            "title": f"{note} Market overview: {query}",
+            "url": "https://example.com/placeholder",
+            "description": (
+                f"Illustrative placeholder for '{query}'. No real figures available "
+                f"because BRAVE_SEARCH_API_KEY is not set. Treat market size/growth as unknown."
+            ),
         },
         {
-            "title": f"Top Competitors in {query} Space",
-            "url": "https://example.com/competitors",
-            "description": f"Analysis of 5 major players in the {query} industry with funding details.",
-        },
-        {
-            "title": f"India {query} Industry Trends 2025",
-            "url": "https://example.com/trends",
-            "description": f"Key trends shaping the {query} sector in India, including digital transformation.",
+            "title": f"{note} Competitive landscape: {query}",
+            "url": "https://example.com/placeholder",
+            "description": (
+                f"Illustrative placeholder for competitors in the '{query}' space. "
+                f"Real competitor data requires a configured search provider."
+            ),
         },
     ]
