@@ -32,6 +32,7 @@ from mcp.server.fastmcp import FastMCP
 
 from app.services.mcp_server import get_mcp_server
 from app.database import get_session_factory
+import app.agents.orchestrator  # noqa: F401 — imports all 7 agents so they self-register
 
 mcp = FastMCP(
     "agentforge",

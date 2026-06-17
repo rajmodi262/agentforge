@@ -55,6 +55,20 @@ class BaseAgent:
         "Return the same JSON schema as your original output, but improved."
     )
 
+    def __init_subclass__(cls, **kwargs):
+        """Auto-register every agent subclass into AGENT_REGISTRY on import.
+
+        This is what makes the MCP `list_agents` tool and the Prompt IDE see
+        the real roster — previously the registry was never populated.
+        """
+        super().__init_subclass__(**kwargs)
+        try:
+            key = (cls.name or "").lower().replace(" agent", "").strip()
+            if key and key != "baseagent":
+                AGENT_REGISTRY[key] = cls
+        except Exception:
+            pass
+
     def __init__(self):
         self.claude = get_claude_service()
 
