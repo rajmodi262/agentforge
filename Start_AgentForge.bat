@@ -29,11 +29,19 @@ call venv\Scripts\activate.bat
 if not exist "venv\Scripts\uvicorn.exe" (
     echo Installing backend dependencies...
     python -m pip install --upgrade pip >nul 2>&1
-    pip install -r requirements.txt
+    :: --no-cache-dir keeps memory low on small machines
+    pip install --no-cache-dir -r requirements.txt
     if errorlevel 1 (
-        echo Error: Failed to install Python dependencies.
+        echo Error: Failed to install core Python dependencies.
         pause
         exit /b 1
+    )
+    :: Optional vector-RAG deps are heavy ^(torch^); failure here is non-fatal.
+    echo Installing optional RAG dependencies ^(skippable^)...
+    pip install --no-cache-dir -r requirements-optional.txt
+    if errorlevel 1 (
+        echo Warning: Optional RAG/vector-store deps were not installed ^(likely low memory^).
+        echo The app will run normally with RAG disabled. Continuing...
     )
 ) else (
     echo Backend dependencies already installed.
