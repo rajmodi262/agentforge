@@ -39,9 +39,10 @@ httpx==0.28.1
 # PDF Generation
 reportlab==4.2.5
 
-# ChromaDB (Vector Store)
-chromadb==0.5.23
-sentence-transformers==3.3.1
+# Vector store / embeddings for RAG are OPTIONAL and heavy
+# (sentence-transformers pulls in torch, ~2GB). The app runs fine without them —
+# rag_service disables itself gracefully. To enable vector RAG, install:
+#   pip install -r requirements-optional.txt
 
 # Rate Limiting
 slowapi==0.1.9

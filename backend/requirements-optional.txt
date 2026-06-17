@@ -1,0 +1,11 @@
+# Optional heavy dependencies — vector RAG (ChromaDB).
+#
+# NOT required to run AgentForge. The app degrades gracefully without these:
+# app/services/rag_service.py catches the missing import and simply disables RAG.
+#
+# WARNING: sentence-transformers pulls in torch (~2GB) and can exhaust RAM on
+# small machines during pip install. Only install if you specifically want the
+# vector-store RAG features.
+
+chromadb==0.5.23
+sentence-transformers==3.3.1
