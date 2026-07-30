@@ -8,4 +8,4 @@
 # vector-store RAG features.
 
 chromadb==0.5.23
-sentence-transformers==3.3.1
+sentence-transformers==5.6.1
