@@ -37,7 +37,7 @@ pydantic-settings==2.7.1
 httpx==0.28.1
 
 # PDF Generation
-reportlab==4.2.5
+reportlab==5.0.0
 
 # Vector store / embeddings for RAG are OPTIONAL and heavy
 # (sentence-transformers pulls in torch, ~2GB). The app runs fine without them —
